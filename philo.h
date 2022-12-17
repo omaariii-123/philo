@@ -11,6 +11,8 @@ typedef struct s_philo
 	int	id;
 	int	lfork;
 	int	rfork;
+	size_t	whentodie;
+	int	dead_or_alive;
 	pthread_t	philo;
 	struct s_data	*data;
 }t_philo;
