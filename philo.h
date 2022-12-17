@@ -20,7 +20,7 @@ typedef struct s_data
 	size_t	ttd;
 	size_t	tte;
 	size_t	tts;
-	int	stime;
+	size_t	stime;
 	int	n_ph;
 	t_philo *philos;
 	pthread_mutex_t *forks;

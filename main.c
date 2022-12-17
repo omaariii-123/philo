@@ -1,4 +1,22 @@
 #include"philo.h"
+size_t get_time(void)
+{
+	static struct timeval t;
+
+	gettimeofday(&t, NULL);
+	return ((t.tv_sec * 1000) + (t.tv_usec / 1000));
+}
+
+void	ft_usleep(size_t n)
+{
+	size_t end = n + get_time();
+	printf("%ld\n", n);
+	while (get_time() < end)
+	{
+		usleep(50);	
+	}
+}
+
 
 void	init_philo(t_data *wallet,int n)
 {
@@ -38,28 +56,28 @@ void	fill_data(t_data *wallet, char **av)
 void	think(t_philo *philo)
 {
 	pthread_mutex_lock(philo->data->main);
-	pthread_mutex_lock(philo->data->pr);
-	printf("philo n : %d is sleeping\n", philo->id);
-	usleep(50);
-	printf("philo n : %d is thinking\n", philo->id);
-	pthread_mutex_unlock(philo->data->pr);
+	//pthread_mutex_lock(philo->data->pr);
+	printf("%ld philo n : %d is sleeping\n",get_time() - philo->data->stime, philo->id);
+	ft_usleep(philo->data->tts);
+ 	printf("%ld philo n : %d is thinking\n",get_time() - philo->data->stime, philo->id);	
+	//pthread_mutex_unlock(philo->data->pr);
 	pthread_mutex_unlock(philo->data->main);
 }
 
 void	eat(t_philo *philo)
 {
-	if (philo->id % 2 == 0)
-		usleep(20);
-	pthread_mutex_lock(philo->data->main);
+	//if (philo->id % 2 == 0)
+	//	usleep(20);
 	pthread_mutex_lock(&philo->data->forks[philo->lfork]);
-	pthread_mutex_lock(&philo->data->forks[philo->rfork]);
-	pthread_mutex_lock(philo->data->pr);
-	printf("philo n : %d is eating\n", philo->id);
-	usleep(1000);
-	pthread_mutex_unlock(philo->data->pr);
+	pthread_mutex_lock(&philo->data->forks[philo->rfork]);	
+	//pthread_mutex_lock(philo->data->main);
+	//pthread_mutex_lock(philo->data->pr);
+ 	printf("%ld philo n : %d is eating\n",get_time() - philo->data->stime, philo->id);	
+	ft_usleep(philo->data->tte);
+ 	//pthread_mutex_unlock(philo->data->pr);
+	//pthread_mutex_unlock(philo->data->main);
 	pthread_mutex_unlock(&philo->data->forks[philo->rfork]);
 	pthread_mutex_unlock(&philo->data->forks[philo->lfork]);
-	pthread_mutex_unlock(philo->data->main);
 }
 void	*routine(void *data)
 {
@@ -81,11 +99,12 @@ int	main(int ac, char **av)
 	
 	fill_data(&wallet, av);
 	init_mutex(&wallet);
+	wallet.stime = get_time();
 	while (i < wallet.n_ph)
 	{
 		init_philo(&wallet, i);
 		pthread_create(&wallet.philos[i].philo, NULL, &routine, &wallet.philos[i]);
-		usleep(20);
+	//	usleep(1000);
 		i++;
 	}
 	i = 0;
