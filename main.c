@@ -67,14 +67,17 @@ void	fill_data(t_data *wallet, char **av)
 	wallet->pr = malloc(sizeof(pthread_mutex_t));
 	wallet->n_ph = n;
 }
-
-void	think(t_philo *philo)
+void	sleeping(t_philo *philo)
 {
-//	pthread_mutex_lock(philo->data->main);
 	pthread_mutex_lock(philo->data->pr);
 	printf("%ld philo n : %d is sleeping\n",get_time() - philo->data->stime, philo->id);
 	pthread_mutex_unlock(philo->data->pr);
 	ft_usleep(philo->data->tts);
+
+}
+void	think(t_philo *philo)
+{
+	
 	pthread_mutex_lock(philo->data->pr);
  	printf("%ld philo n : %d is thinking\n",get_time() - philo->data->stime, philo->id);	
 	pthread_mutex_unlock(philo->data->pr);
@@ -87,7 +90,6 @@ void	eat(t_philo *philo)
 	pthread_mutex_lock(&philo->data->forks[philo->rfork]);	
 	
 	pthread_mutex_lock(philo->data->main);
-	philo->whentodie =get_time() + philo->data->ttd - philo->data->stime;
 	philo->last_meal = get_time() - philo->data->stime;
 	philo->eating = 1;
 	pthread_mutex_unlock(philo->data->main);
@@ -107,13 +109,15 @@ void	eat(t_philo *philo)
 }
 void	*routine(void *data)
 {
-	int	i;
 	t_philo *philo;
 
 	philo = (t_philo *)data;
 	while(1)
 	{
+
+
 		eat(philo);
+		sleeping(philo);
 		think(philo);
 	}
 }
@@ -145,6 +149,9 @@ int check(t_data *data)
 		{
 			pthread_mutex_lock(data->pr);
 			printf("%ld philo n : %d is dead !\n", get_time() - data->stime , data->philos[i].id);
+	//		pthread_mutex_unlock(&data->forks[i]);
+//			pthread_mutex_unlock(data->pr);
+//			pthread_mutex_unlock(data->main);
 			destroy(data);
 			return(1);
 		}
@@ -153,20 +160,32 @@ int check(t_data *data)
 	}
 	return(0);
 }
+void	free_all(t_data *data)
+{
+	int	i = 0;
+
+	while(i < data->n_ph)
+	{
+		free(&data->philos[i]);
+		i++;
+	}
+}
 int	main(int ac, char **av)
 {
 	t_data wallet;
-	int	i = 0;
+	int	i;
+	(void)ac;
 
 	
 	fill_data(&wallet, av);
 	init_mutex(&wallet);
 	wallet.stime = get_time();
+	i = 0;
 	while (i < wallet.n_ph)
 	{
 		init_philo(&wallet, i);
 		pthread_create(&wallet.philos[i].philo, NULL, &routine, &wallet.philos[i]);
-		usleep(15);
+		usleep(50);
 		i++;
 	}
 	i = 0;
@@ -179,8 +198,9 @@ int	main(int ac, char **av)
 	while(1)
 	{
 		if (check(&wallet))
-			break;
+		{
+			exit(1);
+		}
 	}
-		;
 
 }
