@@ -13,6 +13,9 @@ typedef struct s_philo
 	int	rfork;
 	size_t	whentodie;
 	int	dead_or_alive;
+	int	eating;
+	int	done;
+	size_t	last_meal;
 	pthread_t	philo;
 	struct s_data	*data;
 }t_philo;

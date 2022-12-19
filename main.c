@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   main.c                                             :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: yomari <marvin@42.fr>                      +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2022/12/18 23:58:58 by yomari            #+#    #+#             */
+/*   Updated: 2022/12/19 01:31:03 by yomari           ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include"philo.h"
 
 size_t get_time(void)
@@ -24,8 +36,9 @@ void	init_philo(t_data *wallet,int n)
 	wallet->philos[n].lfork = n;
 	wallet->philos[n].rfork = (n + 1) % wallet->n_ph;
 	wallet->philos[n].data = wallet;
-	wallet->philos[n].whentodie = wallet->stime + wallet->ttd;
-	wallet->philos[n].dead_or_alive = 1;
+	wallet->philos[n].whentodie = get_time() - wallet->stime + wallet->ttd ;
+	wallet->philos[n].last_meal = 0;
+	wallet->philos[n].eating = 0;
 }
 void	init_mutex(t_data *wallet)
 {
@@ -65,23 +78,29 @@ void	think(t_philo *philo)
 	pthread_mutex_lock(philo->data->pr);
  	printf("%ld philo n : %d is thinking\n",get_time() - philo->data->stime, philo->id);	
 	pthread_mutex_unlock(philo->data->pr);
-//	pthread_mutex_unlock(philo->data->main);
+
 }
 
 void	eat(t_philo *philo)
 {
-	//if (philo->id % 2 == 0)
-	//	usleep(20);
 	pthread_mutex_lock(&philo->data->forks[philo->lfork]);
 	pthread_mutex_lock(&philo->data->forks[philo->rfork]);	
+	
+	pthread_mutex_lock(philo->data->main);
+	philo->whentodie =get_time() + philo->data->ttd - philo->data->stime;
+	philo->last_meal = get_time() - philo->data->stime;
+	philo->eating = 1;
+	pthread_mutex_unlock(philo->data->main);
+	
 	pthread_mutex_lock(philo->data->pr);
  	printf("%ld philo n : %d is eating\n",get_time() - philo->data->stime, philo->id);	
  	pthread_mutex_unlock(philo->data->pr);
 	ft_usleep(philo->data->tte);
 
 	pthread_mutex_lock(philo->data->main);
-	philo->whentodie += philo->data->ttd;
+	philo->eating = 0;
 	pthread_mutex_unlock(philo->data->main);
+
 
 	pthread_mutex_unlock(&philo->data->forks[philo->rfork]);
 	pthread_mutex_unlock(&philo->data->forks[philo->lfork]);
@@ -94,24 +113,50 @@ void	*routine(void *data)
 	philo = (t_philo *)data;
 	while(1)
 	{
-		pthread_mutex_lock(philo->data->main);
-		if(philo->dead_or_alive == 0)
-		{
-			pthread_mutex_unlock(philo->data->main);
-			break;
-		}
-		pthread_mutex_unlock(philo->data->main);
 		eat(philo);
 		think(philo);
 	}
-	return(NULL);
+}
+void	destroy(t_data *data)
+{
+	int	i = 0;
+
+	while (i < data->n_ph)
+	{
+		pthread_mutex_destroy(&data->forks[i]);
+		i++;
+	}
+	//pthread_mutex_unlock(data->pr);
+	//pthread_mutex_unlock(data->main);
+
+	pthread_mutex_destroy(data->pr);
+	pthread_mutex_destroy(data->main);
+
+
+}
+int check(t_data *data)
+{
+	int	i = 0;
+
+	while(i < data->n_ph)
+	{
+		pthread_mutex_lock(data->main);
+		if ( (get_time() - data->philos[i].last_meal - data->stime) >= data->ttd && (data->philos[i].eating == 0))
+		{
+			pthread_mutex_lock(data->pr);
+			printf("%ld philo n : %d is dead !\n", get_time() - data->stime , data->philos[i].id);
+			destroy(data);
+			return(1);
+		}
+		i++;
+		pthread_mutex_unlock(data->main);
+	}
+	return(0);
 }
 int	main(int ac, char **av)
 {
 	t_data wallet;
 	int	i = 0;
-	int	d;
-	void	*ptr;
 
 	
 	fill_data(&wallet, av);
@@ -127,8 +172,15 @@ int	main(int ac, char **av)
 	i = 0;
 	while (i < wallet.n_ph)
 	{
-		pthread_join(wallet.philos[i].philo, NULL);
+		pthread_detach(wallet.philos[i].philo);
 		i++;
 	}
+
+	while(1)
+	{
+		if (check(&wallet))
+			break;
+	}
+		;
 
 }
