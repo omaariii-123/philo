@@ -86,9 +86,8 @@ void	think(t_philo *philo)
 
 void	eat(t_philo *philo)
 {
+	pthread_mutex_lock(&philo->data->forks[philo->rfork]);
 	pthread_mutex_lock(&philo->data->forks[philo->lfork]);
-	pthread_mutex_lock(&philo->data->forks[philo->rfork]);	
-	
 	pthread_mutex_lock(philo->data->main);
 	philo->last_meal = get_time() - philo->data->stime;
 	philo->eating = 1;
@@ -103,9 +102,9 @@ void	eat(t_philo *philo)
 	philo->eating = 0;
 	pthread_mutex_unlock(philo->data->main);
 
-
-	pthread_mutex_unlock(&philo->data->forks[philo->rfork]);
 	pthread_mutex_unlock(&philo->data->forks[philo->lfork]);
+	pthread_mutex_unlock(&philo->data->forks[philo->rfork]);
+
 }
 void	*routine(void *data)
 {
@@ -114,7 +113,6 @@ void	*routine(void *data)
 	philo = (t_philo *)data;
 	while(1)
 	{
-
 
 		eat(philo);
 		sleeping(philo);
@@ -128,6 +126,7 @@ void	destroy(t_data *data)
 	while (i < data->n_ph)
 	{
 		pthread_mutex_destroy(&data->forks[i]);
+		free(&data->philos[i]);
 		i++;
 	}
 	//pthread_mutex_unlock(data->pr);
@@ -138,6 +137,12 @@ void	destroy(t_data *data)
 
 
 }
+void call(t_data *data)
+{
+
+	ft_usleep(data->ttd);
+	//pthread_mutex_unlock(data->pr);
+}
 int check(t_data *data)
 {
 	int	i = 0;
@@ -145,17 +150,15 @@ int check(t_data *data)
 	while(i < data->n_ph)
 	{
 		pthread_mutex_lock(data->main);
+		pthread_mutex_lock(data->pr);
 		if ( (get_time() - data->philos[i].last_meal - data->stime) >= data->ttd && (data->philos[i].eating == 0))
 		{
-			pthread_mutex_lock(data->pr);
 			printf("%ld philo n : %d is dead !\n", get_time() - data->stime , data->philos[i].id);
-	//		pthread_mutex_unlock(&data->forks[i]);
-//			pthread_mutex_unlock(data->pr);
-//			pthread_mutex_unlock(data->main);
-			destroy(data);
+			call(data);
 			return(1);
 		}
 		i++;
+		pthread_mutex_unlock(data->pr);
 		pthread_mutex_unlock(data->main);
 	}
 	return(0);
@@ -164,11 +167,10 @@ void	free_all(t_data *data)
 {
 	int	i = 0;
 
-	while(i < data->n_ph)
-	{
-		free(&data->philos[i]);
-		i++;
-	}
+	free(data->philos);
+	free(data->main);
+	free(data->forks);
+	free(data->pr);
 }
 int	main(int ac, char **av)
 {
@@ -184,8 +186,11 @@ int	main(int ac, char **av)
 	while (i < wallet.n_ph)
 	{
 		init_philo(&wallet, i);
-		pthread_create(&wallet.philos[i].philo, NULL, &routine, &wallet.philos[i]);
-		usleep(50);
+		if ((pthread_create(&wallet.philos[i].philo, NULL, &routine, &wallet.philos[i])!= 0))
+				{		
+					printf("error creating thread !\n");
+					return 1;
+					}
 		i++;
 	}
 	i = 0;
@@ -197,10 +202,13 @@ int	main(int ac, char **av)
 
 	while(1)
 	{
-		if (check(&wallet))
-		{
-			exit(1);
-		}
+//		if (check(&wallet))
+//		{
+
+		//	destroy(&wallet);
+//			free_all(&wallet);
+//			break;
+//		}
 	}
 
 }
