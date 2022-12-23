@@ -88,13 +88,21 @@ void	think(t_philo *philo)
 void	eat(t_philo *philo)
 {
 
-
+	if (philo->dead_or_alive == 0)
+		{
+			return;
+		}
 
 		if (philo->id % 2 == 0)
 	{
-		pthread_mutex_lock(&philo->data->forks[philo->rfork]);
-		pthread_mutex_lock(&philo->data->forks[philo->lfork]);
+	pthread_mutex_lock(&philo->data->forks[philo->rfork]);
+	pthread_mutex_lock(&philo->data->forks[philo->lfork]);
 	pthread_mutex_lock(philo->data->main);
+	if (philo->dead_or_alive == 0)
+		{
+			pthread_mutex_unlock(philo->data->main);
+			return;
+		}
 	philo->last_meal = get_time() - philo->data->stime;
 	philo->eating = 1;
 	pthread_mutex_unlock(philo->data->main);
@@ -102,8 +110,9 @@ void	eat(t_philo *philo)
 	}
 	else
 	{
-		pthread_mutex_lock(&philo->data->forks[philo->lfork]);
-		pthread_mutex_lock(&philo->data->forks[philo->rfork]);
+
+	pthread_mutex_lock(&philo->data->forks[philo->lfork]);
+	pthread_mutex_lock(&philo->data->forks[philo->rfork]);
 	pthread_mutex_lock(philo->data->main);
 	philo->last_meal = get_time() - philo->data->stime;
 	philo->eating = 1;
@@ -120,7 +129,6 @@ void	eat(t_philo *philo)
 	
 	pthread_mutex_unlock(&philo->data->forks[philo->lfork]);
 	pthread_mutex_unlock(&philo->data->forks[philo->rfork]);
-//		printf("philo n %d *** %ld****\n", philo->id,philo->last_meal);
 
 	pthread_mutex_lock(philo->data->main);
 	philo->eating = 0;
@@ -135,18 +143,18 @@ void	*routine(void *data)
 	philo = (t_philo *)data;
 	while(1)
 	{
-		//if (!philo->dead_or_alive)
-		//	return(NULL);
+		pthread_mutex_lock(philo->data->main);
+		if (philo->dead_or_alive == 0)
+		{
+			pthread_mutex_unlock(philo->data->main);
+			return (NULL);
+		}
+		pthread_mutex_unlock(philo->data->main);
 		eat(philo);
-		//if (!philo->dead_or_alive)
-		//	return(NULL);
 		sleeping(philo);
-		//if (!philo->dead_or_alive)
-		//	return(NULL);
 		think(philo);
-		//if (!philo->dead_or_alive)
-		//	return(NULL);
 	}
+	return (NULL);
 }
 void	destroy(t_data *data)
 {
@@ -177,9 +185,6 @@ int check(t_data *data)
 {
 	int	i = 0;
 
-		printf("hhh\n");
-while(1)
-	{
 	while(i < data->n_ph)
 	{
 		pthread_mutex_lock(data->main);
@@ -188,16 +193,15 @@ while(1)
 			data->philos[i].dead_or_alive = 0;
 			pthread_mutex_lock(data->pr);
 			printf("%ld philo n : %d is dead !\n", get_time() - data->stime , data->philos[i].id);
-			call(data);
+		//	call(data);
 			return(1);
 		}
 		i++;
 		pthread_mutex_unlock(data->main);
 	}
-	}
 	return(0);
 }
-void	free_all(t_data *data)
+/*void	free_all(t_data *data)
 {
 	int	i = 0;
 
@@ -205,11 +209,13 @@ void	free_all(t_data *data)
 	free(data->main);
 	free(data->forks);
 	free(data->pr);
-}
+}*/
 int	main(int ac, char **av)
 {
 	t_data wallet;
 	int	i;
+	int	checkk;
+	int	flag = 0;
 	(void)ac;
 
 	
@@ -227,21 +233,23 @@ int	main(int ac, char **av)
 					}
 		i++;
 	}
-	i = 0;
-	while (i < wallet.n_ph)
+	while(!flag)
 	{
-		pthread_detach(wallet.philos[i].philo);
-		i++;
-	}
-	while(1)
-	{
-		if (check(&wallet))
+		checkk = check(&wallet);
+		if(checkk == 1)
 		{
-
-		//	destroy(&wallet);
-		//free_all(&wallet);
-			break;
+			flag = 1;
+			//destroy(&wallet);
+			//pthread_mutex_unlock(wallet.main);
+			
+			//pthread_mutex_unlock(wallet.pr);
 		}
 	}
-
+			
+		pthread_join(wallet.philos[0].philo, NULL);	
+		pthread_join(wallet.philos[1].philo, NULL);	
+		pthread_join(wallet.philos[2].philo, NULL);	
+		pthread_join(wallet.philos[3].philo, NULL);	
+//	free_all(&wallet);
+	return(0);
 }
