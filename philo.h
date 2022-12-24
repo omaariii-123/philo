@@ -21,8 +21,8 @@
 typedef struct s_philo
 {
 	int	id;
-	int	lfork;
-	int	rfork;
+	pthread_mutex_t	*lfork;
+	pthread_mutex_t	*rfork;
 	size_t	whentodie;
 	int	dead_or_alive;
 	int	eating;
