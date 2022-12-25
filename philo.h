@@ -17,6 +17,7 @@
 #include<pthread.h>
 #include<unistd.h>
 #include<sys/time.h>
+#include <stdbool.h>
 
 typedef struct s_philo
 {
@@ -26,7 +27,6 @@ typedef struct s_philo
 	size_t	whentodie;
 	int	dead_or_alive;
 	int	eating;
-	int	done;
 	size_t	last_meal;
 	pthread_t	philo;
 	struct s_data	*data;
@@ -39,6 +39,7 @@ typedef struct s_data
 	size_t	tts;
 	size_t	stime;
 	int	n_ph;
+	bool	done;
 	t_philo *philos;
 	pthread_mutex_t *forks;
 	pthread_mutex_t *main;
