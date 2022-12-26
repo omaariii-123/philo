@@ -6,20 +6,20 @@
 /*   By: yomari <marvin@42.fr>                      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/26 03:37:38 by yomari            #+#    #+#             */
-/*   Updated: 2022/12/26 11:15:07 by yomari           ###   ########.fr       */
+/*   Updated: 2022/12/26 13:41:07 by yomari           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include"philo.h"
 
 void	sleeping(t_philo *philo)
 {
-	print_action(philo->data, "is Sleeping ", philo->id);
+	print_action(philo->data, "is sleeping ", philo->id);
 	ft_usleep(philo->data->tts);
 }
 
 void	think(t_philo *philo)
 {
-	print_action(philo->data, "is Thinking", philo->id);
+	print_action(philo->data, "is thinking", philo->id);
 }
 
 void	lock_for_eating(t_philo *philo, int n)
@@ -43,7 +43,7 @@ void	eat(t_philo *philo)
 	{
 		pthread_mutex_unlock(philo->data->main);
 		pthread_mutex_lock(philo->lfork);
-		print_action(philo->data, "Has taken a fork", philo->id);
+		print_action(philo->data, "has taken a fork", philo->id);
 		philo->data->done = 1;
 		pthread_mutex_unlock(philo->lfork);
 		return ;
@@ -53,7 +53,7 @@ void	eat(t_philo *philo)
 	pthread_mutex_lock(philo->rfork);
 	print_fork(philo);
 	lock_for_eating(philo, 1);
-	print_action(philo->data, "is Eating", philo->id);
+	print_action(philo->data, "is eating", philo->id);
 	ft_usleep(philo->data->tte);
 	lock_for_eating(philo, 0);
 	pthread_mutex_unlock(philo->rfork);

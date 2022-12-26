@@ -6,7 +6,7 @@
 /*   By: yomari <marvin@42.fr>                      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/26 12:04:44 by yomari            #+#    #+#             */
-/*   Updated: 2022/12/26 12:45:53 by yomari           ###   ########.fr       */
+/*   Updated: 2022/12/26 13:42:55 by yomari           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,7 +30,7 @@ void	set_time_nd_meal(t_data *data, size_t *time, int *meal, int i)
 void	print_dead(t_data *data, int i)
 {
 	pthread_mutex_lock(data->pr);
-	printf("%ld philo n : %d is dead !\n", \
+	printf("%ld %d died\n", \
 			get_time() - data->stime, data->philos[i].id + 1);
 	pthread_mutex_unlock(data->pr);
 }

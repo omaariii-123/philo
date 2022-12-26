@@ -6,7 +6,7 @@
 /*   By: yomari <marvin@42.fr>                      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/26 03:56:46 by yomari            #+#    #+#             */
-/*   Updated: 2022/12/26 12:47:15 by yomari           ###   ########.fr       */
+/*   Updated: 2022/12/26 13:43:43 by yomari           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,7 @@ void	print_action(t_data *data, char *str, int id)
 	if (!done)
 	{
 		pthread_mutex_lock(data->pr);
-		printf("%ld philo n : %d %s \n", get_time() - data->stime, id + 1, str);
+		printf("%ld %d %s \n", get_time() - data->stime, id + 1, str);
 		pthread_mutex_unlock(data->pr);
 	}
 }
@@ -37,9 +37,9 @@ void	print_fork(t_philo *philo)
 	if (!done)
 	{
 		pthread_mutex_lock(philo->data->pr);
-		printf("%ld philo n : %d Has taken a fork  \n", \
+		printf("%ld %d Has taken a fork  \n", \
 				get_time() - philo->data->stime, philo->id + 1);
-		printf("%ld philo n : %d Has taken a fork  \n", \
+		printf("%ld %d Has taken a fork  \n", \
 				get_time() - philo->data->stime, philo->id + 1);
 		pthread_mutex_unlock(philo->data->pr);
 	}

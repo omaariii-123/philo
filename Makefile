@@ -1,6 +1,6 @@
 CC = cc
 
-CFLAGS = -Wall -Werror -Wextra -fsanitize=thread
+CFLAGS = -Wall -Werror -Wextra ##-fsanitize=address #thread
 
 SRCS = main.c init.c actions.c tools.c more_tools.c errors.c
 
